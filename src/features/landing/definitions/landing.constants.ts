@@ -27,7 +27,8 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
 
 /** Placeholder until the walkthrough recording is uploaded. Embedding is off on
  *  plenty of videos, so a stand-in has to be one that is known to allow it. */
-export const WALKTHROUGH_VIDEO_ID = 'M7lc1UVf-VE';
+export const WALKTHROUGH_VIDEO_ID = "Cmr7H4OKkLs";
+
 
 /** Render free tier sleeps after inactivity, so a cold start can take most of a
  *  minute. Retries stretch out rather than give up inside that window. */

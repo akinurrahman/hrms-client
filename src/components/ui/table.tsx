@@ -1,12 +1,16 @@
+import { forwardRef } from "react"
+
 import { cn } from "@/lib/utils"
 
 /** Semantic table primitives on the Meridian surface tokens.
  *
  *  `Table` is always wrapped in its own horizontally scrollable container - a
- *  wide financial table must never make the whole page scroll sideways. */
-function Table({ className, ...props }: React.ComponentProps<"table">) {
-  return (
-    <div data-slot="table-container" className="relative w-full overflow-x-auto">
+ *  wide financial table must never make the whole page scroll sideways. The
+ *  ref points at that scroll container, not the `<table>`, so callers can
+ *  drive it (e.g. mouse-drag scrolling) without reaching past this component. */
+const Table = forwardRef<HTMLDivElement, React.ComponentProps<"table">>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} data-slot="table-container" className="relative w-full overflow-x-auto">
       <table
         data-slot="table"
         className={cn("w-full caption-bottom border-collapse text-sm", className)}
@@ -14,7 +18,8 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
       />
     </div>
   )
-}
+)
+Table.displayName = "Table"
 
 /** The header sits on its own recessed band with a stronger closing rule, so it
  *  reads as a header and not as the first row of data. */

@@ -45,7 +45,7 @@ export function UserMenu() {
 
     const handleLogout = () => {
         logout.mutate(undefined, {
-            onSettled: () => navigate('/login', { replace: true }),
+            onSettled: () => navigate('/', { replace: true }),
         });
     };
 

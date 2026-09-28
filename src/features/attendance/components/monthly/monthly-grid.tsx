@@ -1,4 +1,6 @@
-﻿import { parseISO } from 'date-fns';
+﻿import { useEffect, useRef } from 'react';
+
+import { parseISO } from 'date-fns';
 import { AlertTriangle, ChevronRight } from 'lucide-react';
 
 import { Skeleton } from '@/components/ui/skeleton';
@@ -42,6 +44,7 @@ export function MonthlyGrid({
   onSelectRow,
 }: Props) {
   const days = rows[0]?.days ?? [];
+  const scrollRef = useDragScroll<HTMLDivElement>();
 
   if (!rows.length) {
     return (
@@ -53,7 +56,10 @@ export function MonthlyGrid({
 
   return (
     <div className="m-panel m-panel-shine overflow-hidden">
-      <Table className={cn(isLoading && 'opacity-60 transition-opacity')}>
+      <Table
+        ref={scrollRef}
+        className={cn(isLoading && 'opacity-60 transition-opacity')}
+      >
         <TableHeader>
           <TableRow>
             <TableHead className="sticky left-0 z-20 w-36 bg-table-head sm:w-52 sm:min-w-52">
@@ -153,6 +159,71 @@ function Tally({ label, value }: { label: string; value: number }) {
       </span>
     </span>
   );
+}
+
+/** Mouse-drag panning for the day columns. Touch already scrolls natively;
+ *  desktop only has the native scrollbar, which sits below every row and
+ *  forces a scroll-to-bottom before it can be reached. A click that moves
+ *  past the threshold is flagged so the day-cell click it would otherwise
+ *  fire on release is swallowed, not treated as a day selection. */
+function useDragScroll<T extends HTMLDivElement>() {
+  const ref = useRef<T>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    el.classList.add('cursor-grab');
+
+    let isDown = false;
+    let dragged = false;
+    let startX = 0;
+    let startScrollLeft = 0;
+
+    const onMouseDown = (e: MouseEvent) => {
+      isDown = true;
+      dragged = false;
+      startX = e.pageX;
+      startScrollLeft = el.scrollLeft;
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDown) return;
+      const delta = e.pageX - startX;
+      if (Math.abs(delta) > 3) dragged = true;
+      if (dragged) {
+        e.preventDefault();
+        el.scrollLeft = startScrollLeft - delta;
+        el.classList.add('cursor-grabbing');
+      }
+    };
+
+    const onMouseUp = () => {
+      isDown = false;
+      el.classList.remove('cursor-grabbing');
+    };
+
+    const onClickCapture = (e: MouseEvent) => {
+      if (dragged) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    el.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    el.addEventListener('click', onClickCapture, true);
+
+    return () => {
+      el.removeEventListener('mousedown', onMouseDown);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      el.removeEventListener('click', onClickCapture, true);
+    };
+  }, []);
+
+  return ref;
 }
 
 /** Sized to a full month so the first paint is the same height as the loaded
